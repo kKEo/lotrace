@@ -18,17 +18,52 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class LocationService extends Service {
     private static final String TAG = "LocationService";
     private FusedLocationProviderClient fusedLocationClient;
     public static MutableLiveData<Location> locationLiveData = new MutableLiveData<>();
+
+    private LocationApi locationApi;
 
     @Override
     public void onCreate() {
         super.onCreate();
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         startLocationUpdates();
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://org.maziarz.org")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        locationApi = retrofit.create(LocationApi.class);
     }
+
+    private void sendLocationToServer(LocationData locationData) {
+        Call<Void> call = locationApi.sendLocation(locationData);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "Location sent successfully");
+                } else {
+                    Log.e(TAG, "Failed to send location: " + response);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e(TAG, "Error sending location: " + t.getMessage());
+            }
+        });
+    }
+
 
     private void startLocationUpdates() {
         LocationRequest.Builder builder =
@@ -51,7 +86,12 @@ public class LocationService extends Service {
             }
             for (Location location : locationResult.getLocations()) {
                 if (location != null) {
+                    Log.i(TAG, "loc: "+ location.toString());
+
                     locationLiveData.postValue(location);
+                    LocationData locationData = new LocationData(location.getLatitude(), location.getLongitude());
+                    Log.i(TAG, "loc: "+ locationData.toString());
+                    sendLocationToServer(locationData);
                 }
             }
         }

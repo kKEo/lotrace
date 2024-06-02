@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChanged(Location location) {
                 if (location != null) {
-                    Log.d("MainActivity", "Location: " + location.getLatitude() + ", " + location.getLongitude());
+//                    Log.i("MainActivity", "A Location: " + location.getLatitude() + ", " + location.getLongitude());
                     myService.addItem("Location: " + location.getLatitude() + ", " + location.getLongitude());
                     updateTextView();
                 }
