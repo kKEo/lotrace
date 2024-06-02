@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -19,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.Observer;
 
 import android.content.BroadcastReceiver;
 
@@ -139,6 +141,20 @@ public class MainActivity extends AppCompatActivity {
 
         IntentFilter filter = new IntentFilter(PositionService.ACTION_LIST_UPDATED);
         registerReceiver(listUpdateReceiver, filter);
+
+        Intent locationIntent = new Intent(this, LocationService.class);
+        startService(locationIntent);
+
+        LocationService.locationLiveData.observe(this, new Observer<Location>() {
+            @Override
+            public void onChanged(Location location) {
+                if (location != null) {
+                    Log.d("MainActivity", "Location: " + location.getLatitude() + ", " + location.getLongitude());
+                    myService.addItem("Location: " + location.getLatitude() + ", " + location.getLongitude());
+                    updateTextView();
+                }
+            }
+        });
     }
 }
 

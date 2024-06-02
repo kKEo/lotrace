@@ -27,6 +27,9 @@
     android:name=".PositionService"
     android:exported="false" />
 
+	 <service android:name=".LocationService"
+            android:enabled="true"
+            android:exported="false"/>
     </application>
 
 </manifest>
