@@ -97,6 +97,41 @@ public class LocationService extends Service {
         }
     };
 
+
+    private void sendLocationToServer(Location location) {
+        double latitude = location.getLatitude();
+        double longitude = location.getLongitude();
+
+        String serverUrl = "http://org.maziarz.org/location";
+        String requestData = "latitude=" + latitude + "&longitude=" + longitude;
+
+        new Thread(() -> {
+            try {
+                URL url = new URL(serverUrl);
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("POST");
+                urlConnection.setDoOutput(true);
+                urlConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+                OutputStream os = urlConnection.getOutputStream();
+                os.write(requestData.getBytes());
+                os.flush();
+                os.close();
+
+                int responseCode = urlConnection.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    // Successfully sent location data
+                } else {
+                    // Failed to send location data
+                }
+                urlConnection.disconnect();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         return START_STICKY;
