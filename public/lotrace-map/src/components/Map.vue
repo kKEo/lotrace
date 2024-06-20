@@ -98,7 +98,7 @@ onMounted(() => {
                 .then((response) => response.json())
                 .then((data) => {
                     var filteredGeojsonData = filterPointsWithinBounds(data);
-                    console.log(filteredGeojsonData);
+                    // console.log(filteredGeojsonData);
 
                     if (geoJsonStatsLayerGroup) {
                         map.removeLayer(geoJsonStatsLayerGroup);
@@ -157,7 +157,6 @@ onMounted(() => {
                 .then((response) => response.json())
                 .then((data) => {
                     var filteredGeojsonData = filterPointsWithinBounds(data);
-                    console.log(filteredGeojsonData);
                     if (geoJsonLayerGroup) {
                         map.removeLayer(geoJsonLayerGroup);
                     }
@@ -175,7 +174,6 @@ onMounted(() => {
                     geoJsonLayerGroup.addTo(map);
                 });
         } else {
-            console.log("Locations not checked");
             if (geoJsonLayerGroup) {
                 map.removeLayer(geoJsonLayerGroup);
             }
@@ -192,7 +190,7 @@ onMounted(() => {
         visibleArea.value.nelat = northEast.lat;
         visibleArea.value.nelng = northEast.lng;
 
-        console.log("Visible area: ", visibleArea.value);
+        // console.log("Visible area: ", visibleArea.value);
         loadUserPositions(chosenParticipant.value);
         loadUserStats(chosenParticipant.value);
     }

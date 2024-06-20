@@ -19,7 +19,7 @@ onMounted(() => {
     fetch("https://org.maziarz.org/api/participants?top=25")
         .then((response) => response.json())
         .then((data) => {
-            console.log(data);
+            // console.log(data);
             options.value = data;
         });
 });
