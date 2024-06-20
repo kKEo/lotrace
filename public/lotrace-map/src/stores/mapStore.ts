@@ -35,3 +35,9 @@ export const visibleArea = useLocalStorage<VisibleArea>("VISIBLE_AREA", {
   nelat: undefined,
   nelng: undefined,
 });
+
+export const locationsChecked = useLocalStorage<Boolean>(
+  "SHOW_LOCATIONS",
+  false,
+);
+export const statsChecked = useLocalStorage<Boolean>("SHOW_STATS", true);

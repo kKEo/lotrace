@@ -1,6 +1,11 @@
 <script setup>
 import { ref } from "vue";
-import { participants, chosenParticipant } from "@/stores/mapStore";
+import {
+    participants,
+    chosenParticipant,
+    locationsChecked,
+    statsChecked,
+} from "@/stores/mapStore";
 import { onMounted, watch } from "vue";
 
 defineProps({
@@ -11,7 +16,7 @@ const count = ref(0);
 const options = ref([]);
 
 onMounted(() => {
-    fetch("https://org.maziarz.org/api/participants?top=20")
+    fetch("https://org.maziarz.org/api/participants?top=25")
         .then((response) => response.json())
         .then((data) => {
             console.log(data);
@@ -37,7 +42,18 @@ watch(chosenParticipant, (newValue) => {
                     {{ option.name }} ({{ option.hours }}h)
                 </option>
             </select>
-            Id: {{ chosenParticipant }}
+        </div>
+        <div>Id: {{ chosenParticipant }}</div>
+        <div>
+            <label>
+                <input type="checkbox" v-model="locationsChecked" />
+                Show locations
+            </label>
+
+            <label>
+                <input type="checkbox" v-model="statsChecked" />
+                Show stats
+            </label>
         </div>
     </div>
 </template>
@@ -48,5 +64,11 @@ watch(chosenParticipant, (newValue) => {
 }
 .card {
     padding: 2px;
+    display: flex;
+}
+.card > div {
+    margin-left: 20px;
+    padding-left: 10px;
+    border-left: 1px solid gray;
 }
 </style>
