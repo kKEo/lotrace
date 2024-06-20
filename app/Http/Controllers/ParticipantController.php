@@ -8,11 +8,24 @@ use App\Models\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+
 class ParticipantController extends BaseController
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Participant::all());
+
+		  $top = $request->query('top', 100);
+
+				$participants = Participant::orderBy('hours', 'asc')
+						  ->select('place', 'id', DB::raw('CONCAT(firstName, \' \', lastName) as name'),
+						           'startingNumber', 
+									  DB::raw('TIMESTAMPDIFF(HOUR, startDateTime, finishDateTime) as hours')
+						  )
+						  ->whereNotNull('place')
+						  ->take($top)
+						  ->get();
+
+        return response()->json($participants);
     }
 
    public function locations($participant_id)
@@ -105,6 +118,8 @@ class ParticipantController extends BaseController
 								  DB::raw('TIMESTAMPDIFF(SECOND, LAG(position_ts) OVER (ORDER BY position_ts), position_ts) AS time_diff'),
 								  DB::raw('LAG(from_start) OVER (ORDER BY position_ts) AS previous_dist')
 					          )
+		           ->where('entry','=',$participant_id)
+					 ->orderBy('position_ts', 'asc')
 					 -> get();
 
         $geoJson = [
