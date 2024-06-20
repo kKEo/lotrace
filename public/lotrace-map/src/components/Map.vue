@@ -10,9 +10,38 @@ import { useGeolocation } from "@vueuse/core";
 
 let map: leaflet.Map;
 let userGeoMarker: leaflet.Marker;
+let geoJsonLayerGroup: leaflet.LayerGroup;
 const { coords, locatedAt, error, resume, pause } = useGeolocation();
 
-import { userMarker, nearbyMarkers } from "@/stores/mapStore";
+import { userMarker, nearbyMarkers, visibleArea } from "@/stores/mapStore";
+
+function moveToCurrentLocation() {
+    if (
+        coords.value.latitude !== Number.POSITIVE_INFINITY &&
+        coords.value.longitude !== Number.POSITIVE_INFINITY
+    ) {
+        userMarker.value.latitude = coords.value.latitude;
+        userMarker.value.longitude = coords.value.longitude;
+
+        if (userGeoMarker) {
+            map.removeLayer(userGeoMarker);
+        }
+        userGeoMarker = leaflet
+            .marker([userMarker.value.latitude, userMarker.value.longitude])
+            .addTo(map)
+            .bindPopup("User Marker");
+
+        map.setView(
+            [userMarker.value.latitude, userMarker.value.longitude],
+            13,
+        );
+
+        const el = userGeoMarker.getElement();
+        if (el) {
+            el.style.filter = "hue-rotate(120deg)";
+        }
+    }
+}
 
 onMounted(() => {
     map = leaflet
@@ -54,11 +83,30 @@ onMounted(() => {
             leaflet.geoJSON(data).addTo(map);
         });
 
+    function filterPointsWithinBounds(geojson) {
+        var sw = L.latLng(visibleArea.value.swlat, visibleArea.value.swlng);
+        var ne = L.latLng(visibleArea.value.nelat, visibleArea.value.nelng);
+        var bounds = L.latLngBounds(sw, ne);
+
+        var filteredFeatures = geojson.features.filter(function (feature) {
+            var coords = feature.geometry.coordinates;
+            var latLng = L.latLng(coords[1], coords[0]);
+            return bounds.contains(latLng);
+        });
+
+        return {
+            type: "FeatureCollection",
+            features: filteredFeatures,
+        };
+    }
+
     fetch("https://org.maziarz.org/api/participants/2422/geojson_points")
         .then((response) => response.json())
         .then((data) => {
+            var filteredGeojsonData = filterPointsWithinBounds(data);
+            console.log(filteredGeojsonData);
             leaflet
-                .geoJSON(data, {
+                .geoJSON(filteredGeojsonData, {
                     pointToLayer: function (feature, latlng) {
                         var color = "red"; // Default color if not specified
                         var distance = feature.properties.distance;
@@ -74,6 +122,42 @@ onMounted(() => {
                 })
                 .addTo(map);
         });
+
+    function loadUserPositions(userId) {
+        fetch(`https://org.maziarz.org/api/participants/${userId}/geojson`)
+            .then((response) => response.json())
+            .then((data) => {
+                var filteredGeojsonData = filterPointsWithinBounds(data);
+                console.log(filteredGeojsonData);
+
+                if (geoJsonLayerGroup) {
+                    map.removeLayer(geoJsonLayerGroup);
+                }
+                geoJsonLayerGroup = L.layerGroup();
+                // let geoJsonLayer =
+                L.geoJSON(filteredGeojsonData).addTo(geoJsonLayerGroup);
+                geoJsonLayerGroup.addTo(map);
+            });
+    }
+
+    function showVisibleAreaCoordinates() {
+        var bounds = map.getBounds();
+        var southWest = bounds.getSouthWest();
+        var northEast = bounds.getNorthEast();
+
+        visibleArea.value.swlat = southWest.lat;
+        visibleArea.value.swlng = southWest.lng;
+        visibleArea.value.nelat = northEast.lat;
+        visibleArea.value.nelng = northEast.lng;
+
+        console.log("Visible area: ", visibleArea.value);
+
+        loadUserPositions(2422);
+    }
+
+    showVisibleAreaCoordinates();
+    map.on("moveend", showVisibleAreaCoordinates);
+    map.on("zoomend", showVisibleAreaCoordinates);
 
     // fetch("https://org.maziarz.org/api/participants/2422/geojson_route")
     //     .then((response) => response.json())
@@ -94,41 +178,9 @@ onMounted(() => {
     //             })
     //             .addTo(map);
     //     });
-
-    fetch("https://org.maziarz.org/api/participants/2422/geojson")
-        .then((response) => response.json())
-        .then((data) => {
-            leaflet.geoJSON(data).addTo(map);
-        });
 });
 
-watchEffect(() => {
-    if (
-        coords.value.latitude !== Number.POSITIVE_INFINITY &&
-        coords.value.longitude !== Number.POSITIVE_INFINITY
-    ) {
-        userMarker.value.latitude = coords.value.latitude;
-        userMarker.value.longitude = coords.value.longitude;
-
-        if (userGeoMarker) {
-            map.removeLayer(userGeoMarker);
-        }
-        userGeoMarker = leaflet
-            .marker([userMarker.value.latitude, userMarker.value.longitude])
-            .addTo(map)
-            .bindPopup("User Marker");
-
-        map.setView(
-            [userMarker.value.latitude, userMarker.value.longitude],
-            13,
-        );
-
-        const el = userGeoMarker.getElement();
-        if (el) {
-            el.style.filter = "hue-rotate(120deg)";
-        }
-    }
-});
+watchEffect(() => {});
 </script>
 
 <style scoped>
