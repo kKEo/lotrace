@@ -29,7 +29,7 @@
 			#charts {
             height: 100vh;
  		      width: 10vw;
-			
+
 			}
     </style>
 </head>
@@ -52,20 +52,20 @@
 
         var marker = L.marker(coordinates).addTo(map);
         marker.bindPopup("You're here").openPopup();
-        
-        
+
+
         // user_id = 2353
         user_id = 2364  // place: 216
         var geoJsonUrl = `https://org.maziarz.org/api/participants/${user_id}/geojson`;
 
     var geojsonMarkerOptions = {
-    radius: 4,
-    fillColor: "#ff7800",
-    color: "#000",
-    weight: 1,
-    opacity: 1,
-    fillOpacity: 0.6
-};
+        radius: 4,
+        fillColor: "#ff7800",
+        color: "#000",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.6
+    };
 
 
     fetch(geoJsonUrl)
