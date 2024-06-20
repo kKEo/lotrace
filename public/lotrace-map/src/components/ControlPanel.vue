@@ -44,12 +44,13 @@ watch(chosenParticipant, (newValue) => {
             </select>
         </div>
         <div>Id: {{ chosenParticipant }}</div>
+    </div>
+    <div class="card">
         <div>
             <label>
                 <input type="checkbox" v-model="locationsChecked" />
                 Show locations
             </label>
-
             <label>
                 <input type="checkbox" v-model="statsChecked" />
                 Show stats
@@ -68,7 +69,5 @@ watch(chosenParticipant, (newValue) => {
 }
 .card > div {
     margin-left: 20px;
-    padding-left: 10px;
-    border-left: 1px solid gray;
 }
 </style>

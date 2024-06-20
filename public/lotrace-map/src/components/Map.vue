@@ -236,6 +236,6 @@ watchEffect(() => {});
 <style scoped>
 #map {
     width: 100vw;
-    height: 100vh;
+    height: 90vh;
 }
 </style>
