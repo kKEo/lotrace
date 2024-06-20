@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import leaflet from "leaflet";
-import { onMounted, watchEffect } from "vue";
+import { onMounted, watchEffect, watch } from "vue";
 
 import { useGeolocation } from "@vueuse/core";
 
@@ -13,7 +13,12 @@ let userGeoMarker: leaflet.Marker;
 let geoJsonLayerGroup: leaflet.LayerGroup;
 const { coords, locatedAt, error, resume, pause } = useGeolocation();
 
-import { userMarker, nearbyMarkers, visibleArea } from "@/stores/mapStore";
+import {
+    userMarker,
+    nearbyMarkers,
+    visibleArea,
+    chosenParticipant,
+} from "@/stores/mapStore";
 
 function moveToCurrentLocation() {
     if (
@@ -44,6 +49,9 @@ function moveToCurrentLocation() {
 }
 
 onMounted(() => {
+    userMarker.value.latitude = 49.99825021043669;
+    userMarker.value.longitude = 19.89727020263672;
+
     map = leaflet
         .map("map")
         .setView([userMarker.value.latitude, userMarker.value.longitude], 13)
@@ -108,6 +116,12 @@ onMounted(() => {
             .then((data) => {
                 var filteredGeojsonData = filterPointsWithinBounds(data);
                 console.log(filteredGeojsonData);
+
+                if (geoJsonLayerGroup) {
+                    map.removeLayer(geoJsonLayerGroup);
+                }
+                geoJsonLayerGroup = L.layerGroup();
+                L.geoJSON(filteredGeojsonData);
                 leaflet
                     .geoJSON(filteredGeojsonData, {
                         pointToLayer: function (feature, latlng) {
@@ -121,7 +135,7 @@ onMounted(() => {
                                 color: "#000",
                                 weight: 1,
                                 opacity: 1,
-                                fillOpacity: 0.8,
+                                fillOpacity: 0.6,
                             }).bindPopup(
                                 `<ul>
                               <li>Distance: <strong>${distance}</strong></li>
@@ -132,7 +146,8 @@ onMounted(() => {
                             );
                         },
                     })
-                    .addTo(map);
+                    .addTo(geoJsonLayerGroup);
+                geoJsonLayerGroup.addTo(map);
             });
     }
 
@@ -164,12 +179,16 @@ onMounted(() => {
 
         console.log("Visible area: ", visibleArea.value);
         // loadUserPositions(2422);
-        loadUserStats(2422);
+        loadUserStats(chosenParticipant.value);
     }
 
     showVisibleAreaCoordinates();
     map.on("moveend", showVisibleAreaCoordinates);
     map.on("zoomend", showVisibleAreaCoordinates);
+
+    watch(chosenParticipant, (newValue) => {
+        showVisibleAreaCoordinates();
+    });
 
     // fetch("https://org.maziarz.org/api/participants/2422/geojson_route")
     //     .then((response) => response.json())

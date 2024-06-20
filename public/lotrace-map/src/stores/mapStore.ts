@@ -25,6 +25,8 @@ type Participant = {
 
 export const participants = useLocalStorage<Participant[]>("PARTICIPANTS", []);
 
+export const chosenParticipant = useLocalStorage<Number>("PARTICIPANT_ID", 0);
+
 export const nearbyMarkers = useLocalStorage<Marker[]>("NEARBY_MARKERS", []);
 
 export const visibleArea = useLocalStorage<VisibleArea>("VISIBLE_AREA", {
