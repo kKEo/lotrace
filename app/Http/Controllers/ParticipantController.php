@@ -101,7 +101,10 @@ class ParticipantController extends BaseController
             return response()->json(['message' => 'Participant not foundi??'], 404);
         }
 		  $locations = DB::table('w23_points_snapped')
-					 -> select('lng_on_route','lat_on_route', 'from_start')
+					 -> select('lng_on_route','lat_on_route', 'from_start', 'position_ts',
+								  DB::raw('TIMESTAMPDIFF(SECOND, LAG(position_ts) OVER (ORDER BY position_ts), position_ts) AS time_diff'),
+								  DB::raw('LAG(from_start) OVER (ORDER BY position_ts) AS previous_dist')
+					          )
 					 -> get();
 
         $geoJson = [
@@ -121,8 +124,12 @@ class ParticipantController extends BaseController
                 ],
                 'properties' => [
 								"color" =>"green",
-								"distance" => $location->from_start
-                    // Add other properties as needed
+								"distance" => round($location->from_start, 2),
+								"time_diff" => $location->time_diff,
+								"previous_dist" => round($location->previous_dist, 2),
+								"avg_velocity" => $location->time_diff > 0 ? round(($location->from_start-$location->previous_dist)/($location->time_diff)*60*60) : 0,
+								"position_ts" => $location->position_ts
+								
                 ],
             ];
         }
