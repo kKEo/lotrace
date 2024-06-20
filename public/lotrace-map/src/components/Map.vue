@@ -52,7 +52,7 @@ onMounted(() => {
     leaflet
         .tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 25,
-            attribution: "© OpenStreetMap SScontributors",
+            attribution: "© OpenStreetMap",
         })
         .addTo(map);
 
@@ -100,37 +100,41 @@ onMounted(() => {
         };
     }
 
-    fetch("https://org.maziarz.org/api/participants/2422/geojson_points")
-        .then((response) => response.json())
-        .then((data) => {
-            var filteredGeojsonData = data;
-            console.log(filteredGeojsonData);
-            leaflet
-                .geoJSON(filteredGeojsonData, {
-                    pointToLayer: function (feature, latlng) {
-                        var color = "red"; // Default color if not specified
-                        var distance = feature.properties.distance;
-                        var velocity = feature.properties.avg_velocity;
-                        var position_ts = feature.properties.position_ts;
-                        return L.circleMarker(latlng, {
-                            radius: 2 + Math.floor(velocity / 4),
-                            fillColor: color,
-                            color: "#000",
-                            weight: 1,
-                            opacity: 1,
-                            fillOpacity: 0.8,
-                        }).bindPopup(
-                            `<ul>
-                            <li>Distance: <strong>${distance}</strong></li>
-                            <li>Avg Velocity: <strong>${velocity}</strong></li>
-                            <li>Time: <strong>${position_ts}</strong></li>
-                           </ul>
-                          `,
-                        );
-                    },
-                })
-                .addTo(map);
-        });
+    function loadUserStats(userId) {
+        fetch(
+            `https://org.maziarz.org/api/participants/${userId}/geojson_points`,
+        )
+            .then((response) => response.json())
+            .then((data) => {
+                var filteredGeojsonData = filterPointsWithinBounds(data);
+                console.log(filteredGeojsonData);
+                leaflet
+                    .geoJSON(filteredGeojsonData, {
+                        pointToLayer: function (feature, latlng) {
+                            var color = "red";
+                            var distance = feature.properties.distance;
+                            var velocity = feature.properties.avg_velocity;
+                            var position_ts = feature.properties.position_ts;
+                            return L.circleMarker(latlng, {
+                                radius: 2 + Math.floor(velocity / 4),
+                                fillColor: color,
+                                color: "#000",
+                                weight: 1,
+                                opacity: 1,
+                                fillOpacity: 0.8,
+                            }).bindPopup(
+                                `<ul>
+                              <li>Distance: <strong>${distance}</strong></li>
+                              <li>Avg Velocity: <strong>${velocity}</strong></li>
+                              <li>Time: <strong>${position_ts}</strong></li>
+                            </ul>
+                            `,
+                            );
+                        },
+                    })
+                    .addTo(map);
+            });
+    }
 
     function loadUserPositions(userId) {
         // fetch(`https://org.maziarz.org/api/participants/${userId}/geojson`)
@@ -159,7 +163,8 @@ onMounted(() => {
         visibleArea.value.nelng = northEast.lng;
 
         console.log("Visible area: ", visibleArea.value);
-        loadUserPositions(2422);
+        // loadUserPositions(2422);
+        loadUserStats(2422);
     }
 
     showVisibleAreaCoordinates();
