@@ -23,6 +23,8 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->get('participants', 'ParticipantController@index');
     $router->get('participants/{participant_id}/locations', 'ParticipantController@locations');
     $router->get('participants/{participant_id}/geojson', 'ParticipantController@geojson');
+    $router->get('participants/{participant_id}/geojson_points', 'ParticipantController@geojson_points');
+    $router->get('participants/{participant_id}/geojson_route', 'ParticipantController@geojson_route_points');
 
 	 $router->get('objects/{id}/geojson', 'ParticipantController@route');
    

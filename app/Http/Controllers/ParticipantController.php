@@ -59,6 +59,77 @@ class ParticipantController extends BaseController
 		 return response()->json($geoJson);
 }
 
+   public function geojson_route_points($participant_id) {
+   
+        $participant = Participant::find($participant_id);
+        if (!$participant) {
+            return response()->json(['message' => 'Participant not foundi??'], 404);
+        }
+		  $locations = DB::table('w23_route')
+					 -> select('longitude','latitude')
+					 -> get();
+
+        $geoJson = [
+            'type' => 'FeatureCollection',
+            'features' => [],
+        ];
+
+        foreach ($locations as $location) {
+            $geoJson['features'][] = [
+                'type' => 'Feature',
+                'geometry' => [
+                    'type' => 'Point',
+                    'coordinates' => [
+                        $location->longitude,
+                        $location->latitude,
+                    ],
+                ],
+                'properties' => [
+								"color" =>"yellow"
+                    // Add other properties as needed
+                ],
+            ];
+        }
+
+
+		 return response()->json($geoJson);
+}
+   public function geojson_points($participant_id) {
+   
+        $participant = Participant::find($participant_id);
+        if (!$participant) {
+            return response()->json(['message' => 'Participant not foundi??'], 404);
+        }
+		  $locations = DB::table('w23_points_snapped')
+					 -> select('lng_on_route','lat_on_route', 'from_start')
+					 -> get();
+
+        $geoJson = [
+            'type' => 'FeatureCollection',
+            'features' => [],
+        ];
+
+        foreach ($locations as $location) {
+            $geoJson['features'][] = [
+                'type' => 'Feature',
+                'geometry' => [
+                    'type' => 'Point',
+                    'coordinates' => [
+                        $location->lng_on_route,
+                        $location->lat_on_route,
+                    ],
+                ],
+                'properties' => [
+								"color" =>"green",
+								"distance" => $location->from_start
+                    // Add other properties as needed
+                ],
+            ];
+        }
+
+
+		 return response()->json($geoJson);
+}
 
   public function route($id)
     {
