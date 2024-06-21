@@ -5,6 +5,7 @@ import {
     chosenParticipant,
     locationsChecked,
     statsChecked,
+    timeScope,
 } from "@/stores/mapStore";
 import { onMounted, watch } from "vue";
 
@@ -15,47 +16,83 @@ defineProps({
 const count = ref(0);
 const options = ref([]);
 
-onMounted(() => {
-    fetch("https://org.maziarz.org/api/participants?top=25")
+function loadParticipants(minHours, maxHours) {
+    console.log("Load participants: ", minHours, " - ", maxHours, "(h)");
+    fetch(
+        `https://org.maziarz.org/api/participants?minHours=${minHours}&maxHours=${maxHours}`,
+    )
         .then((response) => response.json())
         .then((data) => {
             // console.log(data);
             options.value = data;
         });
+}
+
+function loadParticipantsFromRange(minHours, maxHours) {
+    console.log("Load participants: ", minHours, " - ", maxHours, "(h)");
+    fetch(
+        `https://org.maziarz.org/api/participants?minHours=${minHours}&maxHours=${maxHours}`,
+    )
+        .then((response) => response.json())
+        .then((data) => {
+            options.value = data;
+        });
+}
+
+onMounted(() => {
+    loadParticipants(timeScope.value[0], timeScope.value[1]);
 });
 
 watch(chosenParticipant, (newValue) => {
     console.log("Selected option changed to:", newValue);
 });
+
+watch(timeScope, (newValue) => {
+    loadParticipants(timeScope.value[0], timeScope.value[1]);
+});
 </script>
 
 <template>
     <div class="card">
-        <div>
-            <label for="selectControl">Wiślak:</label>
-            <select id="selectControl" v-model="chosenParticipant">
-                <option
-                    v-for="option in options"
-                    :key="option.id"
-                    :value="option.id"
-                >
-                    {{ option.name }} ({{ option.hours }}h)
-                </option>
-            </select>
+        <div
+            style="
+                width: 100vw;
+                max-width: 600px;
+                display: flex;
+                backgound: yellow;
+            "
+        >
+            <div style="width: 220px; margin-right: 10px">
+                Time: {{ timeScope[0] }} - {{ timeScope[1] }}(h)
+            </div>
+            <el-slider v-model="timeScope" range :min="54" :max="170" />
+            <div style="width: 40px"></div>
         </div>
-        <div>Id: {{ chosenParticipant }}</div>
+        <div style="display: flex">
+            <div>
+                <label for="selectControl">Wiślak:</label>
+                <select id="selectControl" v-model="chosenParticipant">
+                    <option
+                        v-for="option in options"
+                        :key="option.id"
+                        :value="option.id"
+                    >
+                        {{ option.name }} ({{ option.hours }}h)
+                    </option>
+                </select>
+            </div>
+            <div style="padding-left: 20px">Id: {{ chosenParticipant }}</div>
+        </div>
     </div>
-    <div class="card">
-        <div>
-            <label>
-                <input type="checkbox" v-model="locationsChecked" />
-                Show locations
-            </label>
-            <label>
-                <input type="checkbox" v-model="statsChecked" />
-                Show stats
-            </label>
-        </div>
+    <div>
+        <label>
+            <input type="checkbox" v-model="locationsChecked" />
+            Show locations
+        </label>
+        <label>
+            <input type="checkbox" v-model="statsChecked" />
+            Show stats
+        </label>
     </div>
 </template>
 
@@ -65,7 +102,6 @@ watch(chosenParticipant, (newValue) => {
 }
 .card {
     padding: 2px;
-    display: flex;
 }
 .card > div {
     margin-left: 20px;

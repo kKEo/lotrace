@@ -41,3 +41,5 @@ export const locationsChecked = useLocalStorage<Boolean>(
   false,
 );
 export const statsChecked = useLocalStorage<Boolean>("SHOW_STATS", true);
+
+export const timeScope = useLocalStorage<Number[]>("TIME_SCOPE", [54, 100]);
