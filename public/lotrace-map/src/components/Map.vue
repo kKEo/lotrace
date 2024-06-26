@@ -128,10 +128,16 @@ onMounted(() => {
                         var velocity = feature.properties.avg_velocity;
                         var elevation = feature.properties.elevation;
 
-                        return L.circleMarker(latlng, {
-                            radius: 2 + Math.floor(velocity / 4),
+                        return L.circle(latlng, {
+                            radius: Math.floor(
+                                1000 /
+                                    (2 +
+                                        100 /
+                                            (Math.floor(velocity / 4) *
+                                                Math.floor(velocity / 4))),
+                            ),
                             fillColor: color,
-                            color: "#000",
+                            color: color,
                             weight: 1,
                             opacity: 1,
                             fillOpacity: 0.6,
