@@ -42,4 +42,19 @@ export const locationsChecked = useLocalStorage<Boolean>(
 );
 export const statsChecked = useLocalStorage<Boolean>("SHOW_STATS", true);
 
-export const timeScope = useLocalStorage<Number[]>("TIME_SCOPE", [54, 100]);
+export const timeScope = useLocalStorage<Number[]>("TIME_SCOPE", [90, 110]);
+
+export const userPoints = useLocalStorage<Record<string, string>>(
+  "USER_POINTS",
+  {},
+);
+
+export const userLocations = useLocalStorage<Record<string, string>>(
+  "USER_LOCATIONS",
+  {},
+);
+
+export const routePoints = useLocalStorage<Record<string, string>>(
+  "ROUTE_POINTS",
+  {},
+);

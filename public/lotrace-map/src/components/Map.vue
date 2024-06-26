@@ -21,6 +21,9 @@ import {
     chosenParticipant,
     locationsChecked,
     statsChecked,
+    userPoints,
+    routePoints,
+    userLocations,
 } from "@/stores/mapStore";
 
 function moveToCurrentLocation() {
@@ -91,59 +94,81 @@ onMounted(() => {
     }
 
     function loadUserStats(userId) {
+        function addToMap(data) {
+            var filteredGeojsonData = filterPointsWithinBounds(data);
+            // console.log(filteredGeojsonData);
+
+            if (geoJsonStatsLayerGroup) {
+                map.removeLayer(geoJsonStatsLayerGroup);
+            }
+            geoJsonStatsLayerGroup = L.layerGroup();
+            L.geoJSON(filteredGeojsonData);
+            leaflet
+                .geoJSON(filteredGeojsonData, {
+                    pointToLayer: function (feature, latlng) {
+                        var position_ts = feature.properties.position_ts;
+                        var color =
+                            position_ts !== undefined
+                                ? new Date(
+                                      position_ts.replace(" ", "T"),
+                                  ).getHours() > 23 ||
+                                  new Date(
+                                      position_ts.replace(" ", "T"),
+                                  ).getHours() < 5
+                                    ? "darkred"
+                                    : "yellow"
+                                : "green";
+                        var distance = feature.properties.distance;
+                        var prev_dist =
+                            Math.round(
+                                100 *
+                                    (feature.properties.distance -
+                                        feature.properties.previous_dist),
+                            ) / 100;
+                        var velocity = feature.properties.avg_velocity;
+                        var elevation = feature.properties.elevation;
+
+                        return L.circleMarker(latlng, {
+                            radius: 2 + Math.floor(velocity / 4),
+                            fillColor: color,
+                            color: "#000",
+                            weight: 1,
+                            opacity: 1,
+                            fillOpacity: 0.6,
+                        }).bindPopup(
+                            `<ul>
+                    <li>Distance: <strong>${distance}</strong></li>
+                    <li><ul>
+                        <li>Dist from last point: <strong>${prev_dist}</strong></li>
+                        <li>Avg Velocity: <strong>${velocity}</strong></li>
+                        <li>Elevation: <strong>${elevation}</strong></li>
+                      </ul>
+                    </li>
+                    <li>Time: <strong>${position_ts}</strong></li>
+                  </ul>
+                  `,
+                        );
+                    },
+                })
+                .addTo(geoJsonStatsLayerGroup);
+            geoJsonStatsLayerGroup.addTo(map);
+        }
+
         if (statsChecked.value) {
-            fetch(
-                `https://org.maziarz.org/api/participants/${userId}/geojson_points`,
-            )
-                .then((response) => response.json())
-                .then((data) => {
-                    var filteredGeojsonData = filterPointsWithinBounds(data);
-                    // console.log(filteredGeojsonData);
-
-                    if (geoJsonStatsLayerGroup) {
-                        map.removeLayer(geoJsonStatsLayerGroup);
-                    }
-                    geoJsonStatsLayerGroup = L.layerGroup();
-                    L.geoJSON(filteredGeojsonData);
-                    leaflet
-                        .geoJSON(filteredGeojsonData, {
-                            pointToLayer: function (feature, latlng) {
-                                var position_ts =
-                                    feature.properties.position_ts;
-                                var color =
-                                    position_ts !== undefined
-                                        ? new Date(
-                                              position_ts.replace(" ", "T"),
-                                          ).getHours() > 23 ||
-                                          new Date(
-                                              position_ts.replace(" ", "T"),
-                                          ).getHours() < 5
-                                            ? "darkred"
-                                            : "yellow"
-                                        : "green";
-                                var distance = feature.properties.distance;
-                                var velocity = feature.properties.avg_velocity;
-
-                                return L.circleMarker(latlng, {
-                                    radius: 2 + Math.floor(velocity / 4),
-                                    fillColor: color,
-                                    color: "#000",
-                                    weight: 1,
-                                    opacity: 1,
-                                    fillOpacity: 0.6,
-                                }).bindPopup(
-                                    `<ul>
-                              <li>Distance: <strong>${distance}</strong></li>
-                              <li>Avg Velocity: <strong>${velocity}</strong></li>
-                              <li>Time: <strong>${position_ts}</strong></li>
-                            </ul>
-                            `,
-                                );
-                            },
-                        })
-                        .addTo(geoJsonStatsLayerGroup);
-                    geoJsonStatsLayerGroup.addTo(map);
-                });
+            if (userPoints.value[userId] === undefined) {
+                fetch(
+                    `https://org.maziarz.org/api/participants/${userId}/geojson_points`,
+                )
+                    .then((response) => response.json())
+                    .then((data) => {
+                        userPoints.value[userId] = JSON.stringify(data);
+                        console.log("Added to userPoints");
+                        addToMap(JSON.parse(userPoints.value[userId]));
+                    });
+            } else {
+                console.log("Use preloaded: ", userId);
+                addToMap(JSON.parse(userPoints.value[userId]));
+            }
         } else {
             if (geoJsonStatsLayerGroup) {
                 map.removeLayer(geoJsonStatsLayerGroup);
@@ -152,27 +177,40 @@ onMounted(() => {
     }
 
     function loadUserPositions(userId) {
+        function addToMap(data) {
+            var filteredGeojsonData = filterPointsWithinBounds(data);
+            if (geoJsonLayerGroup) {
+                map.removeLayer(geoJsonLayerGroup);
+            }
+            geoJsonLayerGroup = L.layerGroup();
+            // let geoJsonLayer =
+            L.geoJSON(filteredGeojsonData, {
+                pointToLayer: function (feature, latlng) {
+                    return L.marker(latlng, {
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0.3,
+                    });
+                },
+            }).addTo(geoJsonLayerGroup);
+            geoJsonLayerGroup.addTo(map);
+        }
+
         if (locationsChecked.value) {
-            fetch(`https://org.maziarz.org/api/participants/${userId}/geojson`)
-                .then((response) => response.json())
-                .then((data) => {
-                    var filteredGeojsonData = filterPointsWithinBounds(data);
-                    if (geoJsonLayerGroup) {
-                        map.removeLayer(geoJsonLayerGroup);
-                    }
-                    geoJsonLayerGroup = L.layerGroup();
-                    // let geoJsonLayer =
-                    L.geoJSON(filteredGeojsonData, {
-                        pointToLayer: function (feature, latlng) {
-                            return L.marker(latlng, {
-                                weight: 1,
-                                opacity: 1,
-                                fillOpacity: 0.3,
-                            });
-                        },
-                    }).addTo(geoJsonLayerGroup);
-                    geoJsonLayerGroup.addTo(map);
-                });
+            if (userLocations.value[userId] === undefined) {
+                fetch(
+                    `https://org.maziarz.org/api/participants/${userId}/geojson`,
+                )
+                    .then((response) => response.json())
+                    .then((data) => {
+                        console.log("Fetch user position: ", userId);
+                        userLocations.value[userId] = JSON.stringify(data);
+                        addToMap(JSON.parse(userLocations.value[userId]));
+                    });
+            } else {
+                console.log("Load user location from cache: ", userId);
+                addToMap(JSON.parse(userLocations.value[userId]));
+            }
         } else {
             if (geoJsonLayerGroup) {
                 map.removeLayer(geoJsonLayerGroup);
