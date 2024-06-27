@@ -26,15 +26,27 @@ import {
     routePoints,
     userLocations,
     userLocationsKeys,
+    showYourLocation,
 } from "@/stores/mapStore";
 
 function moveToCurrentLocation() {
+    if (!showYourLocation.value) {
+        console.log(
+            "Show your location: ",
+            showYourLocation.value,
+            ". Coords: ",
+            coords.value,
+        );
+        return;
+    }
+
     if (
         coords.value.latitude !== Number.POSITIVE_INFINITY &&
         coords.value.longitude !== Number.POSITIVE_INFINITY
     ) {
         userMarker.value.latitude = coords.value.latitude;
         userMarker.value.longitude = coords.value.longitude;
+        console.log(userMarker);
 
         if (userGeoMarker) {
             map.removeLayer(userGeoMarker);
@@ -86,6 +98,8 @@ onMounted(() => {
         .then((data) => {
             leaflet.geoJSON(data).addTo(map);
         });
+
+    moveToCurrentLocation();
 
     function filterPointsWithinBounds(geojson) {
         var sw = L.latLng(visibleArea.value.swlat, visibleArea.value.swlng);
@@ -272,6 +286,10 @@ onMounted(() => {
     });
     watch(locationsChecked, (value) => {
         loadUserPositions(chosenParticipant.value);
+    });
+
+    watchEffect(() => {
+        moveToCurrentLocation();
     });
 
     // var polylineMeasure = leaflet.control

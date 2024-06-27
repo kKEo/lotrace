@@ -7,6 +7,7 @@ import {
     statsChecked,
     timeScope,
     userPointsKeys,
+    showYourLocation,
 } from "@/stores/mapStore";
 import { onMounted, watch } from "vue";
 
@@ -106,6 +107,10 @@ watch(timeScope, (newValue) => {
         <label>
             <input type="checkbox" v-model="statsChecked" />
             Show stats
+        </label>
+        <label>
+            <input type="checkbox" v-model="showYourLocation" />
+            Show your location
         </label>
     </div>
 </template>
