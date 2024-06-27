@@ -49,9 +49,19 @@ export const userPoints = useLocalStorage<Record<string, string>>(
   {},
 );
 
+type UserKey = {
+  userId: string;
+};
+
+export const userPointsKeys = useLocalStorage<string[]>("USER_POINTS_KEYS", []);
+
 export const userLocations = useLocalStorage<Record<string, string>>(
   "USER_LOCATIONS",
   {},
+);
+export const userLocationsKeys = useLocalStorage<string[]>(
+  "USER_LOCATIONS_KEYS",
+  [],
 );
 
 export const routePoints = useLocalStorage<Record<string, string>>(

@@ -22,8 +22,10 @@ import {
     locationsChecked,
     statsChecked,
     userPoints,
+    userPointsKeys,
     routePoints,
     userLocations,
+    userLocationsKeys,
 } from "@/stores/mapStore";
 
 function moveToCurrentLocation() {
@@ -52,6 +54,15 @@ function moveToCurrentLocation() {
             el.style.filter = "hue-rotate(120deg)";
         }
     }
+}
+
+function calculateDistance(polyline) {
+    var latlngs = polyline.getLatLngs();
+    var distance = 0;
+    for (var i = 0; i < latlngs.length - 1; i++) {
+        distance += latlngs[i].distanceTo(latlngs[i + 1]);
+    }
+    return distance;
 }
 
 onMounted(() => {
@@ -144,12 +155,8 @@ onMounted(() => {
                         }).bindPopup(
                             `<ul>
                     <li>Distance: <strong>${distance}</strong></li>
-                    <li><ul>
-                        <li>Dist from last point: <strong>${prev_dist}</strong></li>
-                        <li>Avg Velocity: <strong>${velocity}</strong></li>
-                        <li>Elevation: <strong>${elevation}</strong></li>
-                      </ul>
-                    </li>
+                      <li>Dist from last point: <strong>${prev_dist}</strong></li>
+                      <li>Avg Velocity: <strong>${velocity}</strong></li>
                     <li>Time: <strong>${position_ts}</strong></li>
                   </ul>
                   `,
@@ -168,8 +175,15 @@ onMounted(() => {
                     .then((response) => response.json())
                     .then((data) => {
                         userPoints.value[userId] = JSON.stringify(data);
-                        console.log("Added to userPoints");
+                        userPointsKeys.value.push(userId);
+                        console.log("Added to userPoints: ", userId);
                         addToMap(JSON.parse(userPoints.value[userId]));
+
+                        if (userPointsKeys.value.length > 7) {
+                            var toRemove = userPointsKeys.value.shift();
+                            userPoints.value[toRemove] = undefined;
+                            console.log("User removed from cache: ", toRemove);
+                        }
                     });
             } else {
                 console.log("Use preloaded: ", userId);
@@ -212,6 +226,13 @@ onMounted(() => {
                         console.log("Fetch user position: ", userId);
                         userLocations.value[userId] = JSON.stringify(data);
                         addToMap(JSON.parse(userLocations.value[userId]));
+                        userLocationsKeys.value.push(userId);
+
+                        if (userLocationsKeys.value.length > 3) {
+                            var toRemove = userLocationsKeys.value.shift();
+                            userLocations.value[toRemove] = undefined;
+                            console.log("User removed from cache: ", toRemove);
+                        }
                     });
             } else {
                 console.log("Load user location from cache: ", userId);
@@ -252,6 +273,17 @@ onMounted(() => {
     watch(locationsChecked, (value) => {
         loadUserPositions(chosenParticipant.value);
     });
+
+    // var polylineMeasure = leaflet.control
+    //     .polylineMeasure({
+    //         position: "topright",
+    //         unit: "metres",
+    //         showBearings: false,
+    //         clearMeasurementsOnStop: true,
+    //         showClearControl: true,
+    //         showUnitControl: true,
+    //     })
+    //     .addTo(map);
 
     // fetch("https://org.maziarz.org/api/participants/2422/geojson_route")
     //     .then((response) => response.json())

@@ -6,6 +6,7 @@ import {
     locationsChecked,
     statsChecked,
     timeScope,
+    userPointsKeys,
 } from "@/stores/mapStore";
 import { onMounted, watch } from "vue";
 
@@ -23,7 +24,12 @@ function loadParticipants(minHours, maxHours) {
     )
         .then((response) => response.json())
         .then((data) => {
-            // console.log(data);
+            data.forEach(
+                (op) =>
+                    (op.cached = userPointsKeys.value.includes(op["id"])
+                        ? "[--]"
+                        : "   "),
+            );
             options.value = data;
         });
 }
@@ -35,6 +41,12 @@ function loadParticipantsFromRange(minHours, maxHours) {
     )
         .then((response) => response.json())
         .then((data) => {
+            data.forEach(
+                (op) =>
+                    (op.cached = userPointsKeys.value.includes(op["id"])
+                        ? "[--]"
+                        : "   "),
+            );
             options.value = data;
         });
 }
@@ -77,7 +89,9 @@ watch(timeScope, (newValue) => {
                         :key="option.id"
                         :value="option.id"
                     >
-                        {{ option.name }} ({{ option.hours }}h)
+                        {{ option.cached }} {{ option.name }} ({{
+                            option.hours
+                        }}h)
                     </option>
                 </select>
             </div>
